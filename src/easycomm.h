@@ -172,13 +172,6 @@ public:
                     str3 = String("\n");
                     SerialPort.print(str1 + str2 + str3);
                 } else if (buffer[0] == 'I' && buffer[1] == 'P' &&
-                           buffer[2] == '0') {
-                    // Get the inside temperature
-                    str1 = String("IP0,");
-                    str2 = String(rotator.inside_temperature, DEC);
-                    str3 = String("\n");
-                    SerialPort.print(str1 + str2 + str3);
-                } else if (buffer[0] == 'I' && buffer[1] == 'P' &&
                            buffer[2] == '1') {
                     // Get the status of end-stop, azimuth
                     str1 = String("IP1,");

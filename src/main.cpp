@@ -30,7 +30,7 @@ int port = 23;  //Port number
 WiFiServer server(port);
 WiFiClient client;
 
-uint32_t t_run = 0; // run time of uC
+//uint32_t t_run = 0; // run time of uC
 easycomm comm;
 AccelStepper stepper_az(1, M1IN1, M1IN2);
 AccelStepper stepper_el(1, M2IN1, M2IN2);
@@ -66,7 +66,7 @@ void handleTelnet(){
 
 void setup() {
 
-  ArduinoOTA.onStart([]() {                               //ArduinoOTA code starts
+  ArduinoOTA.onStart([]() {  //ArduinoOTA code starts
     String type;
     if (ArduinoOTA.getCommand() == U_FLASH) {
       type = "sketch";
@@ -98,7 +98,9 @@ void setup() {
   });
   ArduinoOTA.begin();
 
+  // Disabling the watchdog
   ESP.wdtDisable();
+
   // Homing switch
   switch_az.init();
   switch_el.init();
@@ -106,12 +108,28 @@ void setup() {
   // Serial Communication
   comm.easycomm_init();
   SerialPort.println("DV2JB SATNOGS Rotator is ready");
+
+  // Feeding the watchdog so it will not bite/reboot the uC
   ESP.wdtFeed();
 
   // Wifi_STA
   WiFi.mode(WIFI_STA);                                    // To avoid esp8266 from going to AP mode
   WiFi.begin(ssid, password); //Connect to wifi
-  /* SerialPort.println("Connecting to Wifi");               // Wait for connection  
+  
+  // Stepper Motor setup
+  stepper_az.setEnablePin(MOTOR_EN);
+  stepper_az.setPinsInverted(false, false, true);
+  stepper_az.enableOutputs();
+  stepper_az.setMaxSpeed(MAX_SPEED);
+  stepper_az.setAcceleration(MAX_ACCELERATION);
+  stepper_az.setMinPulseWidth(MIN_PULSE_WIDTH);
+  stepper_el.setPinsInverted(false, false, true);
+  stepper_el.enableOutputs();
+  stepper_el.setMaxSpeed(MAX_SPEED);
+  stepper_el.setAcceleration(MAX_ACCELERATION);
+  stepper_el.setMinPulseWidth(MIN_PULSE_WIDTH);
+
+  SerialPort.println("Connecting to Wifi");               // Wait for connection  
   while (WiFi.status() != WL_CONNECTED) {   
     SerialPort.print("."); 
     delay(500);
@@ -122,85 +140,72 @@ void setup() {
   server.begin();
   SerialPort.print("Open Telnet and connect to IP:"); 
   SerialPort.print(WiFi.localIP()); SerialPort.print(" on port ");
-  SerialPort.println(port); */
-
-    // Stepper Motor setup
-    stepper_az.setEnablePin(MOTOR_EN);
-    stepper_az.setPinsInverted(false, false, true);
-    stepper_az.enableOutputs();
-    stepper_az.setMaxSpeed(MAX_SPEED);
-    stepper_az.setAcceleration(MAX_ACCELERATION);
-    stepper_az.setMinPulseWidth(MIN_PULSE_WIDTH);
-    stepper_el.setPinsInverted(false, false, true);
-    stepper_el.enableOutputs();
-    stepper_el.setMaxSpeed(MAX_SPEED);
-    stepper_el.setAcceleration(MAX_ACCELERATION);
-    stepper_el.setMinPulseWidth(MIN_PULSE_WIDTH);
-
-  
+  SerialPort.println(port);
 
 }
 
 void loop() {
   
+  // Keep feeding the watchdog
   ESP.wdtFeed();
+
   //handleTelnet();  
 
-    // Get end stop status
-    rotator.switch_az = switch_az.get_state();
-    rotator.switch_el = switch_el.get_state();
+  // Get end stop status
+  rotator.switch_az = switch_az.get_state();
+  rotator.switch_el = switch_el.get_state();
 
-    // Run easycomm implementation
-    comm.easycomm_proc();
+  // Run easycomm implementation
+  comm.easycomm_proc();
 
-    ArduinoOTA.handle();
+  ArduinoOTA.handle();
 
-    // Get position of both axis
-    control_az.input = step2deg(stepper_az.currentPosition());
-    control_el.input = step2deg(stepper_el.currentPosition());
+  // Get position of both axis
+  control_az.input = step2deg(stepper_az.currentPosition());
+  control_el.input = step2deg(stepper_el.currentPosition());
 
-    // Check rotator status
-    if (rotator.rotator_status != error) {
-        if (rotator.homing_flag == false) {
-            // Check home flag
-            rotator.control_mode = position;
-            // Homing
-            rotator.rotator_error = homing(deg2step(-MAX_M1_ANGLE),
-                                           deg2step(-MAX_M2_ANGLE));
-            if (rotator.rotator_error == no_error) {
-                // No error
-                rotator.rotator_status = idle;
-                rotator.homing_flag = true;
-            } else {
-                // Error
-                rotator.rotator_status = error;
-                rotator.rotator_error = homing_error;
-            }
-        } else {
-            // Control Loop
-            stepper_az.moveTo(deg2step(control_az.setpoint));
-            stepper_el.moveTo(deg2step(control_el.setpoint));
-            rotator.rotator_status = pointing;
-            // Move azimuth and elevation motors
-            stepper_az.run();
-            stepper_el.run();
-            // Idle rotator
-            if (stepper_az.distanceToGo() == 0 && stepper_el.distanceToGo() == 0) {
-                rotator.rotator_status = idle;
-            }
-        }
-    } else {
-        // Error handler, stop motors and disable the motor driver
-        stepper_az.stop();
-        stepper_az.disableOutputs();
-        stepper_el.stop();
-        stepper_el.disableOutputs();
-        if (rotator.rotator_error != homing_error) {
-            // Reset error according to error value
-            rotator.rotator_error = no_error;
-            rotator.rotator_status = idle;
-        }
-    }
+  // Check rotator status
+  if (rotator.rotator_status != error) {
+      if (rotator.homing_flag == false) {
+          // Check home flag
+          rotator.control_mode = position;
+          // Homing
+          rotator.rotator_error = homing(deg2step(-MAX_M1_ANGLE),
+                                          deg2step(-MAX_M2_ANGLE));
+          if (rotator.rotator_error == no_error) {
+              // No error
+              rotator.rotator_status = idle;
+              rotator.homing_flag = true;
+          } else {
+              // Error
+              rotator.rotator_status = error;
+              rotator.rotator_error = homing_error;
+          }
+      } else {
+          // Control Loop
+          stepper_az.moveTo(deg2step(control_az.setpoint));
+          stepper_el.moveTo(deg2step(control_el.setpoint));
+          rotator.rotator_status = pointing;
+          // Move azimuth and elevation motors
+          stepper_az.run();
+          stepper_el.run();
+          // Idle rotator
+          if (stepper_az.distanceToGo() == 0 && stepper_el.distanceToGo() == 0) {
+              rotator.rotator_status = idle;
+          }
+      }
+  } else {
+      // Error handler, stop motors and disable the motor driver
+      stepper_az.stop();
+      stepper_az.disableOutputs();
+      stepper_el.stop();
+      stepper_el.disableOutputs();
+      if (rotator.rotator_error != homing_error) {
+          // Reset error according to error value
+          rotator.rotator_error = no_error;
+          rotator.rotator_status = idle;
+      }
+  }
 }
 
 /**************************************************************************/
