@@ -26,10 +26,6 @@ const char *password = "caygan22";       //Enter your wifi Password
 #include "rotator_pins.h"
 #include "endstop.h"
 
-int port = 23;  //Port number
-WiFiServer server(port);
-WiFiClient client;
-
 //uint32_t t_run = 0; // run time of uC
 easycomm comm;
 AccelStepper stepper_az(1, M1IN1, M1IN2);
@@ -40,6 +36,7 @@ enum _rotator_error homing(int32_t seek_az, int32_t seek_el);
 int32_t deg2step(float deg);
 float step2deg(int32_t step);
 
+// Telnet starts here
 void handleTelnet(){
   if (server.hasClient()){
     SerialPort.println("Client is now connected");
@@ -47,11 +44,9 @@ void handleTelnet(){
   	// client is connected
     if (!client || !client.connected()){
       if(client) client.stop();          // client disconnected
-      //connectFlag = 1;
       client = server.available();
       client.println("\nDV2JB ESP8266 admin control");
-      client.println("type 'h' for help");
-
+      client.println("type '?' for help");
     }
     else {
       server.available().stop();  // have client, block new conections
@@ -63,6 +58,8 @@ void handleTelnet(){
     
   } 
 }
+
+///////////////////////// Setup /////////////////////////
 
 void setup() {
 
@@ -107,7 +104,7 @@ void setup() {
 
   // Serial Communication
   comm.easycomm_init();
-  SerialPort.println("DV2JB SATNOGS Rotator is ready");
+  //SerialPort.println("DV2JB SATNOGS Rotator is ready");
 
   // Feeding the watchdog so it will not bite/reboot the uC
   ESP.wdtFeed();
@@ -148,8 +145,6 @@ void loop() {
   
   // Keep feeding the watchdog
   ESP.wdtFeed();
-
-  //handleTelnet();  
 
   // Get end stop status
   rotator.switch_az = switch_az.get_state();
@@ -206,6 +201,8 @@ void loop() {
           rotator.rotator_status = idle;
       }
   }
+  //Telnet loop
+  handleTelnet();  
 }
 
 /**************************************************************************/
