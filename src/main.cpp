@@ -1,4 +1,4 @@
-#define SAMPLE_TIME        0.1   //Control loop in s
+#define SAMPLE_TIME        0.1   // Control loop in s
 #define RATIO              54    // Gear ratio of rotator gear box for V3.1 Satnogs
 #define MICROSTEP          8     // Set Microstep
 #define MIN_PULSE_WIDTH    20    // In microsecond for AccelStepper
@@ -11,10 +11,10 @@
 #define MAX_M2_ANGLE       360   // Maximum angle of elevation
 #define DEFAULT_HOME_STATE LOW  // Change to LOW according to Home sensor
 #define HOME_DELAY         100 // Time for homing Deceleration in millisecond
-#define SerialPort Serial
+#define SerialPort         Serial
 
-const char *ssid = "CayganFiber20MBPS";  //Enter your wifi SSID
-const char *password = "caygan22";       //Enter your wifi Password
+const char *ssid = "CayganFiber20MBPS";  // Enter your wifi SSID
+const char *password = "caygan22";       // Enter your wifi Password
 
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
@@ -43,8 +43,8 @@ void handleTelnet(){
     if (!client || !client.connected()){
       if(client) client.stop();          // client disconnected
       client = server.available();
-      client.println("\nDV2JB ESP8266-powered Satnogs V3.1");
-      client.println("type '?' for help");
+      client.println("\nDV2JB ESP8266-powered Satnogs V3.1 AZEL Rotator");
+      client.println("Type '?' for more help on command");
     }
     else {
       server.available().stop();  // have client, block new conections
@@ -119,7 +119,11 @@ float step2deg(int32_t step) {
 
 void setup() {
 
-  ArduinoOTA.onStart([]() {  //ArduinoOTA code starts
+  // Wifi_STA
+  WiFi.mode(WIFI_STA);        // To avoid esp8266 from going to AP mode
+  WiFi.begin(ssid, password); //Connect to wifi
+
+  ArduinoOTA.onStart([]() {   //ArduinoOTA code starts
     String type;
     if (ArduinoOTA.getCommand() == U_FLASH) {
       type = "sketch";
@@ -160,10 +164,6 @@ void setup() {
 
   // Serial Communication
   comm.easycomm_init();
-
-  // Wifi_STA
-  WiFi.mode(WIFI_STA);                                    // To avoid esp8266 from going to AP mode
-  WiFi.begin(ssid, password); //Connect to wifi
   
   // Stepper Motor setup
   stepper_az.setEnablePin(MOTOR_EN);
@@ -181,7 +181,7 @@ void setup() {
   SerialPort.println("Connecting to Wifi");               // Wait for connection  
   while (WiFi.status() != WL_CONNECTED) {   
     SerialPort.print("."); 
-    delay(500);
+    delay(200);
   }
   SerialPort.println("");
   SerialPort.print("Connected to "); SerialPort.println(ssid);
@@ -192,6 +192,8 @@ void setup() {
   SerialPort.println(port);
 
 }
+
+///////////////////////// Loop /////////////////////////
 
 void loop() {
   

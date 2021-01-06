@@ -1,10 +1,6 @@
 /*!
 * @file rotator_pins.h
-*
 * It is a header file for pin mapping.
-*
-* Licensed under the GPLv3
-*
 */
 
 #ifndef ROTATOR_PINS_H_

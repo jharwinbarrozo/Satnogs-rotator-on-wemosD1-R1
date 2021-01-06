@@ -1,8 +1,3 @@
-/*!
-* @file endstop.h
-* It is a driver for end-stops, mechanical, optical, magnetic etc.
-*/
-
 #ifndef ENDSTOP_H_
 #define ENDSTOP_H_
 
