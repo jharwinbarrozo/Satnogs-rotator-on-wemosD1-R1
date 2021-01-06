@@ -44,7 +44,7 @@ public:
                         buffer[4] == 'L') {
                         // Send current absolute position in deg
                         str1 = String("AZ");
-                        str2 = String(control_az.input, 1);
+                        str2 = String(control_az.input, 1); // 1 here means decimal place (0.0)
                         str3 = String(" EL");
                         str4 = String(control_el.input, 1);
                         str5 = String("\n");
@@ -56,14 +56,6 @@ public:
                         strncpy(data, rawData + 2, 10);
                         if (isNumber(data)) {
                             control_az.setpoint = atof(data);
-                        }
-                        // Get the absolute position in deg for elevation
-                        rawData = strtok_r(Data, " ", &Data);
-                        if (rawData[0] == 'E' && rawData[1] == 'L') {
-                            strncpy(data, rawData + 2, 10);
-                            if (isNumber(data)) {
-                                control_el.setpoint = atof(data);
-                            }
                         }
                     }
                 } else if (buffer[0] == 'E' && buffer[1] == 'L') {
