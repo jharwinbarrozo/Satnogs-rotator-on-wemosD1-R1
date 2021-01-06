@@ -183,8 +183,8 @@ public:
                     ESP.restart();
                 }
                 // Reset the buffer an clean the serial buffer
-                BufferCnt = 0;
                 client.flush();
+                BufferCnt = 0;
             } else {
                 // Fill the buffer with incoming data
                 buffer[BufferCnt] = incomingByte;

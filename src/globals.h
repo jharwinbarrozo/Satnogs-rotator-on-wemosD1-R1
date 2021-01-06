@@ -26,7 +26,6 @@ struct _control{
     double speed;          ///< Motor Rotation speed in deg/s
     double setpoint;       ///< Position set point in deg
     double setpoint_speed; ///< Speed set point in deg/s
-    uint16_t load;         ///< Motor Load in mA
     double u;              ///< Control signal range 0-255
     double p, i, d;        ///< Control gains
 };
@@ -42,10 +41,10 @@ struct _rotator{
 };
 
 _control control_az = { .input = 0, .input_prv = 0, .speed=0, .setpoint = 0,
-                        .setpoint_speed = 0, .load = 0, .u = 0, .p = 8.0,
+                        .setpoint_speed = 0, .u = 0, .p = 8.0,
                         .i = 0.0, .d = 0.5 };
 _control control_el = { .input = 0, .input_prv = 0, .speed=0, .setpoint = 0,
-                        .setpoint_speed = 0, .load = 0, .u = 0, .p = 10.0,
+                        .setpoint_speed = 0, .u = 0, .p = 10.0,
                         .i = 0.0, .d = 0.3 };
 _rotator rotator = { .rotator_status = idle, .rotator_error = no_error,
                      .control_mode = position, .homing_flag = false,
