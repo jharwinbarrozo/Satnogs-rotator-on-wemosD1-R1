@@ -83,7 +83,7 @@ public:
                            buffer[2] == ' ' && buffer[3] == 's' &&
                            buffer[4] == 'e')
                            ) {
-                    // Stop Moving
+                    // Stop Moving AZ and EL
                     rotator.control_mode = position;
                     str1 = String("AZ");
                     str2 = String(control_az.input, 1);
@@ -92,6 +92,24 @@ public:
                     str5 = String("\n");
                     client.print(str1 + str2 + str3 + str4 + str5);
                     control_az.setpoint = control_az.input;
+                    control_el.setpoint = control_el.input;
+                } else if ((buffer[0] == 'S' && buffer[1] == 'A') || 
+                           (buffer[0] == 's' && buffer[1] == 'a')) {
+                    // Stop Moving AZ only
+                    rotator.control_mode = position;
+                    str1 = String("AZ");
+                    str2 = String(control_az.input, 1);
+                    str3 = String("\n");
+                    client.print(str1 + str2 + str3);
+                    control_az.setpoint = control_az.input;
+                } else if ((buffer[0] == 'S' && buffer[1] == 'E') || 
+                           (buffer[0] == 's' && buffer[1] == 'e')) {
+                    // Stop Moving EL only
+                    rotator.control_mode = position;
+                    str1 = String("EL");
+                    str2 = String(control_el.input, 1);
+                    str3 = String("\n");
+                    client.print(str1 + str2 + str3);
                     control_el.setpoint = control_el.input;
                 } else if ((buffer[0] == 'R' && buffer[1] == 'E' &&
                            buffer[2] == 'S' && buffer[3] == 'E' &&
@@ -132,10 +150,10 @@ public:
                     // Show all commands
                     client.println("");
                     client.println("\nDisplay information about builtin commands\n");
-                    client.println("AZ              Azimuth, number - 1 decimal place [deg]");
-                    client.println("EL              Elevation, number - 1 decimal place [deg]");
+                    client.println("AZ90.0 EL90.0   Azimuth and Elevation, number - 1 decimal place [deg]");
                     client.println("SA              Stop azimuth moving");
                     client.println("SE              Stop elevation moving");
+                    client.println("SA SE           Stop moving both");
                     client.println("RESET           Move to home position");
                     client.println("PARK            Move to park position");
                     client.println("VE              Show the version of the rotator");                 
