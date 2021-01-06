@@ -1,7 +1,3 @@
-/*!
-* @file globals.h
-*/
-
 #ifndef LIBRARIES_GLOBALS_H_
 #define LIBRARIES_GLOBALS_H_
 

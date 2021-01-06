@@ -1,8 +1,3 @@
-/*!
-* @file rotator_pins.h
-* It is a header file for pin mapping.
-*/
-
 #ifndef ROTATOR_PINS_H_
 #define ROTATOR_PINS_H_
 
