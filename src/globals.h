@@ -1,10 +1,5 @@
 /*!
 * @file globals.h
-*
-* It is a file to define all global variables
-*
-* Licensed under the GPLv3
-*
 */
 
 #ifndef LIBRARIES_GLOBALS_H_
@@ -18,8 +13,7 @@ enum _rotator_status {
 };
 /** Rotator Errors */
 enum _rotator_error {
-    no_error = 1, sensor_error = 2, homing_error = 4, motor_error = 8,
-    over_temperature = 12
+    no_error = 1, sensor_error = 2, homing_error = 4, motor_error = 8
 };
 /** Rotator Control Modes */
 enum _control_mode {

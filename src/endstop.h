@@ -1,50 +1,29 @@
 /*!
 * @file endstop.h
-*
 * It is a driver for end-stops, mechanical, optical, magnetic etc.
-*
-* Licensed under the GPLv3
-*
 */
 
 #ifndef ENDSTOP_H_
 #define ENDSTOP_H_
 
-/**************************************************************************/
-/*!
-    @brief    Class that functions for interacting with end-stop.
-    @param    pin
-              Set the arduino pin
-    @param    default_state
-              Set the default state of end-stop HIGH or LOW
-*/
-/**************************************************************************/
+// Class that functions for interacting with end-stop.
 class endstop {
 public:
 
     endstop(uint8_t pin, bool default_state) {
-        _pin = pin;
-        _default_state = default_state;
+        _pin = pin; //pin, set the arduino pin
+        _default_state = default_state; // Set the default state of end-stop HIGH or LOW
     }
 
-    /**************************************************************************/
-    /*!
-        @brief    Initialize the Input pin for end-stop
-    */
-    /**************************************************************************/
+    // Initialize the Input pin for end-stop
     void init() {
         pinMode(_pin, INPUT_PULLUP);
     }
 
-    /**************************************************************************/
-    /*!
-        @brief    Get the state of end-stop
-        @return   True if end-stop is triggered
-    */
-    /**************************************************************************/
+    // Get the state of end-stop
     bool get_state() {
         if (digitalRead(_pin) == _default_state)
-            return true;
+            return true; // Return True if end-stop is triggered
         else
             return false;
     }

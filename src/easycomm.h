@@ -13,27 +13,16 @@ WiFiClient client;
 #define BUFFER_SIZE   256   ///< Set the size of serial buffer
 #define BAUDRATE      19200 ///< Set the Baudrate of easycomm 3 protocol
 
-/**************************************************************************/
-/*!
-    @brief    Class that functions for easycomm 3 implementation
-*/
-/**************************************************************************/
+// Class that functions for easycomm 3 implementation
 class easycomm {
 public:
 
-    /**************************************************************************/
-    /*!
-        @brief    Initialize the Serial Port
-    */
-    /**************************************************************************/
+    //Initialize the Serial Port
     void easycomm_init() {
-	    SerialPort.begin(BAUDRATE);
+	SerialPort.begin(BAUDRATE);
     }
-    /**************************************************************************/
-    /*!
-        @brief    Get the commands from RS485 and response to the client
-    */
-    /**************************************************************************/
+
+    // Process easycomm commands and response to the client
     void easycomm_proc() {
         char buffer[BUFFER_SIZE];
         char incomingByte;

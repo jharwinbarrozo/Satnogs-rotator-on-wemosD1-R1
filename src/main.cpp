@@ -1,17 +1,16 @@
-
-#define SAMPLE_TIME        0.1   ///< Control loop in s
-#define RATIO              54    ///< Gear ratio of rotator gear box for V3.1 Satnogs
-#define MICROSTEP          8     ///< Set Microstep
-#define MIN_PULSE_WIDTH    20    ///< In microsecond for AccelStepper
-#define MAX_SPEED          3200  ///< In steps/s, consider the microstep, default 3200
-#define MAX_ACCELERATION   1600  ///< In steps/s^2, consider the microstep, default 1600
-#define SPR                1600L ///< Step Per Revolution, consider the microstep
-#define MIN_M1_ANGLE       0     ///< Minimum angle of azimuth
-#define MAX_M1_ANGLE       360   ///< Maximum angle of azimuth
-#define MIN_M2_ANGLE       0     ///< Minimum angle of elevation
-#define MAX_M2_ANGLE       360   ///< Maximum angle of elevation
-#define DEFAULT_HOME_STATE LOW  ///< Change to LOW according to Home sensor
-#define HOME_DELAY         100 ///< Time for homing Deceleration in millisecond     // orig 12000
+#define SAMPLE_TIME        0.1   //Control loop in s
+#define RATIO              54    // Gear ratio of rotator gear box for V3.1 Satnogs
+#define MICROSTEP          8     // Set Microstep
+#define MIN_PULSE_WIDTH    20    // In microsecond for AccelStepper
+#define MAX_SPEED          3200  // In steps/s, consider the microstep, default 3200
+#define MAX_ACCELERATION   1600  // In steps/s^2, consider the microstep, default 1600
+#define SPR                1600L // Step Per Revolution, consider the microstep
+#define MIN_M1_ANGLE       0     // Minimum angle of azimuth
+#define MAX_M1_ANGLE       360   // Maximum angle of azimuth
+#define MIN_M2_ANGLE       0     // Minimum angle of elevation
+#define MAX_M2_ANGLE       360   // Maximum angle of elevation
+#define DEFAULT_HOME_STATE LOW  // Change to LOW according to Home sensor
+#define HOME_DELAY         100 // Time for homing Deceleration in millisecond
 #define SerialPort Serial
 
 const char *ssid = "CayganFiber20MBPS";  //Enter your wifi SSID
@@ -26,7 +25,6 @@ const char *password = "caygan22";       //Enter your wifi Password
 #include "rotator_pins.h"
 #include "endstop.h"
 
-//uint32_t t_run = 0; // run time of uC
 easycomm comm;
 AccelStepper stepper_az(1, M1IN1, M1IN2);
 AccelStepper stepper_el(1, M2IN1, M2IN2);
@@ -45,19 +43,77 @@ void handleTelnet(){
     if (!client || !client.connected()){
       if(client) client.stop();          // client disconnected
       client = server.available();
-      client.println("\nDV2JB ESP8266 admin control");
+      client.println("\nDV2JB ESP8266-powered Satnogs V3.1");
       client.println("type '?' for help");
     }
     else {
       server.available().stop();  // have client, block new conections
     }
   }
-  if (client && client.connected() && client.available()){
-    // client input processing
-    while(client.available());
-    
-  } 
 }
+
+// Move both axis with one direction in order to find home position, end-stop switches
+// seek_az - Steps to find home position for azimuth axis
+// seek_el - Steps to find home position for elevation axis
+enum _rotator_error homing(int32_t seek_az, int32_t seek_el) {
+    bool isHome_az = false;
+    bool isHome_el = false;
+
+    // Move motors to "seek" position
+    stepper_az.moveTo(seek_az);
+    stepper_el.moveTo(seek_el);
+
+    // Homing loop
+    while (isHome_az == false || isHome_el == false) {
+        if (switch_az.get_state() == true && !isHome_az) {
+            // Find azimuth home
+            stepper_az.moveTo(stepper_az.currentPosition());
+            isHome_az = true;
+        }
+        if (switch_el.get_state() == true && !isHome_el) {
+            // Find elevation home
+            stepper_el.moveTo(stepper_el.currentPosition());
+            isHome_el = true;
+        }
+        // Check if the rotator goes out of limits or something goes wrong (in
+        // mechanical)
+        if ((stepper_az.distanceToGo() == 0 && !isHome_az) ||
+            (stepper_el.distanceToGo() == 0 && !isHome_el)){
+            return homing_error;
+        }
+        // Move motors to "seek" position
+        stepper_az.run();
+        stepper_el.run();
+    }
+    // Delay to Deccelerate and homing, to complete the movements
+    uint32_t time = millis();
+    while (millis() - time < HOME_DELAY) {
+        stepper_az.run();
+        stepper_el.run();
+    }
+    // Set the home position and reset all critical control variables
+    stepper_az.setCurrentPosition(0);
+    stepper_el.setCurrentPosition(0);
+    control_az.setpoint = 0;
+    control_el.setpoint = 0;
+
+    return no_error;
+}
+
+// Convert degrees to steps according to step/revolution, rotator gear box ratio and microstep
+// deg - Degrees in float format
+// step - Steps for stepper motor driver, int32_t
+int32_t deg2step(float deg) {
+    return (RATIO * SPR * deg / 360);
+}
+
+// Convert steps to degrees according to step/revolution, rotator gear box ratio and microstep
+// step - Steps in int32_t format
+// deg - Degrees in float format
+float step2deg(int32_t step) {
+    return (360.00 * step / (SPR * RATIO));
+}
+
 
 ///////////////////////// Setup /////////////////////////
 
@@ -104,10 +160,6 @@ void setup() {
 
   // Serial Communication
   comm.easycomm_init();
-  //SerialPort.println("DV2JB SATNOGS Rotator is ready");
-
-  // Feeding the watchdog so it will not bite/reboot the uC
-  ESP.wdtFeed();
 
   // Wifi_STA
   WiFi.mode(WIFI_STA);                                    // To avoid esp8266 from going to AP mode
@@ -202,87 +254,5 @@ void loop() {
       }
   }
   //Telnet loop
-  handleTelnet();  
-}
-
-/**************************************************************************/
-/*!
-    @brief    Move both axis with one direction in order to find home position,
-              end-stop switches
-    @param    seek_az
-              Steps to find home position for azimuth axis
-    @param    seek_el
-              Steps to find home position for elevation axis
-    @return   _rotator_error
-*/
-/**************************************************************************/
-enum _rotator_error homing(int32_t seek_az, int32_t seek_el) {
-    bool isHome_az = false;
-    bool isHome_el = false;
-
-    // Move motors to "seek" position
-    stepper_az.moveTo(seek_az);
-    stepper_el.moveTo(seek_el);
-
-    // Homing loop
-    while (isHome_az == false || isHome_el == false) {
-        if (switch_az.get_state() == true && !isHome_az) {
-            // Find azimuth home
-            stepper_az.moveTo(stepper_az.currentPosition());
-            isHome_az = true;
-        }
-        if (switch_el.get_state() == true && !isHome_el) {
-            // Find elevation home
-            stepper_el.moveTo(stepper_el.currentPosition());
-            isHome_el = true;
-        }
-        // Check if the rotator goes out of limits or something goes wrong (in
-        // mechanical)
-        if ((stepper_az.distanceToGo() == 0 && !isHome_az) ||
-            (stepper_el.distanceToGo() == 0 && !isHome_el)){
-            return homing_error;
-        }
-        // Move motors to "seek" position
-        stepper_az.run();
-        stepper_el.run();
-    }
-    // Delay to Deccelerate and homing, to complete the movements
-    uint32_t time = millis();
-    while (millis() - time < HOME_DELAY) {
-        stepper_az.run();
-        stepper_el.run();
-    }
-    // Set the home position and reset all critical control variables
-    stepper_az.setCurrentPosition(0);
-    stepper_el.setCurrentPosition(0);
-    control_az.setpoint = 0;
-    control_el.setpoint = 0;
-
-    return no_error;
-}
-
-/**************************************************************************/
-/*!
-    @brief    Convert degrees to steps according to step/revolution, rotator
-              gear box ratio and microstep
-    @param    deg
-              Degrees in float format
-    @return   Steps for stepper motor driver, int32_t
-*/
-/**************************************************************************/
-int32_t deg2step(float deg) {
-    return (RATIO * SPR * deg / 360);
-}
-
-/**************************************************************************/
-/*!
-    @brief    Convert steps to degrees according to step/revolution, rotator
-              gear box ratio and microstep
-    @param    step
-              Steps in int32_t format
-    @return   Degrees in float format
-*/
-/**************************************************************************/
-float step2deg(int32_t step) {
-    return (360.00 * step / (SPR * RATIO));
+  handleTelnet();
 }
