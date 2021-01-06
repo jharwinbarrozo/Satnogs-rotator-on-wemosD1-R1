@@ -106,7 +106,10 @@ void handleTelnet(){
   }
 }
 
-///////////////////////// Setup /////////////////////////
+////////////////////////////////////////////////////////
+///////////////////////// Setup ////////////////////////
+////////////////////////////////////////////////////////
+
 void setup() {
 
   // Wifi_STA
@@ -179,13 +182,16 @@ void setup() {
   SerialPort.print("Connected to "); SerialPort.println(ssid);
   SerialPort.print("IP address: "); SerialPort.println(WiFi.localIP());  
   server.begin();
-  SerialPort.print("Open Telnet and connect to IP:"); 
-  SerialPort.print(WiFi.localIP()); SerialPort.print(" on port ");
-  SerialPort.println(port);
-
+  SerialPort.print("To connect using telnet:");
+  SerialPort.print("telnet"); SerialPort.print(WiFi.localIP());
+  SerialPort.print(" "); SerialPort.println(port);
+  SerialPort.println("");
 }
 
+////////////////////////////////////////////////////////
 ///////////////////////// Loop /////////////////////////
+////////////////////////////////////////////////////////
+
 void loop() {
   
   // Feed the watchdog
