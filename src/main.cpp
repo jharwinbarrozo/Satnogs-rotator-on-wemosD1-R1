@@ -88,9 +88,8 @@ enum _rotator_error homing(int32_t seek_az, int32_t seek_el) {
 
 // Telnet starts here
 void handleTelnet(){
-  if (server.hasClient()){
+  if (server.hasClient()) {
     SerialPort.println("Client is now connected");
-
   	// client is connected
     if (!client || !client.connected()){
       // client disconnected

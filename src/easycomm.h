@@ -150,21 +150,21 @@ public:
                     // Show all commands
                     client.println("");
                     client.println("\nDisplay information about builtin commands\n");
-                    client.println("AZ90.0 EL90.0   Azimuth and Elevation, number - 1 decimal place [deg]");
-                    client.println("SA              Stop azimuth moving");
-                    client.println("SE              Stop elevation moving");
-                    client.println("SA SE           Stop moving both");
-                    client.println("RESET           Move to home position");
-                    client.println("PARK            Move to park position");
-                    client.println("VE              Show the version of the rotator");                 
-                    client.println("IP1             Get the status of end-stop, azimuth");
-                    client.println("IP2             Get the status of end-stop, elevation");
-                    client.println("IP3             et the current position of azimuth in deg");
-                    client.println("IP4             Get the current position of elevation in deg");
-                    client.println("GS              Get the status of the rotator");
-                    client.println("GE              Get if there are any errors");
-                    client.println("RB              Reboot the uC");
-                    client.println("?               Display this commands again");
+                    client.println(" AZ90.0 EL90.0   Azimuth and Elevation, number - 1 decimal place [deg]");
+                    client.println(" SA              Stop azimuth moving");
+                    client.println(" SE              Stop elevation moving");
+                    client.println(" SA SE           Stop moving both");
+                    client.println(" RESET           Move to home position");
+                    client.println(" PARK            Move to park position");
+                    client.println(" VE              Show the version of the rotator");                 
+                    client.println(" IP1             Get the status of end-stop, azimuth");
+                    client.println(" IP2             Get the status of end-stop, elevation");
+                    client.println(" IP3             et the current position of azimuth in deg");
+                    client.println(" IP4             Get the current position of elevation in deg");
+                    client.println(" GS              Get the status of the rotator");
+                    client.println(" GE              Get if there are any errors");
+                    client.println(" RB              Reboot the uC");
+                    client.println(" ?               Display this commands again");
                     client.println("");
                 } else if (buffer[0] == 'I' && buffer[1] == 'P' &&
                            buffer[2] == '1') {
