@@ -10,11 +10,13 @@
 #define MIN_M2_ANGLE       0     // Minimum angle of elevation
 #define MAX_M2_ANGLE       360   // Maximum angle of elevation
 #define DEFAULT_HOME_STATE LOW  // Change to LOW according to Home sensor
-#define HOME_DELAY         100 // Time for homing Deceleration in millisecond
+#define HOME_DELAY         150 // Time for homing Deceleration in millisecond
 #define SerialPort         Serial
 
-const char *ssid = "CayganFiber20MBPS";  // Enter your wifi SSID
-const char *password = "caygan22";       // Enter your wifi Password
+// Enter your wifi SSID
+const char *ssid = "CayganFiber20MBPS";  
+// Enter your wifi Password
+const char *password = "caygan22";       
 
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
@@ -30,31 +32,17 @@ AccelStepper stepper_az(1, M1IN1, M1IN2);
 AccelStepper stepper_el(1, M2IN1, M2IN2);
 endstop switch_az(SW1, DEFAULT_HOME_STATE), switch_el(SW2, DEFAULT_HOME_STATE);
 
-enum _rotator_error homing(int32_t seek_az, int32_t seek_el);
-int32_t deg2step(float deg);
-float step2deg(int32_t step);
+// Convert degrees to steps according to step/revolution, rotator gear box ratio and microstep
+int32_t deg2step(float deg) {
+    return (RATIO * SPR * deg / 360);
+}
 
-// Telnet starts here
-void handleTelnet(){
-  if (server.hasClient()){
-    SerialPort.println("Client is now connected");
-
-  	// client is connected
-    if (!client || !client.connected()){
-      if(client) client.stop();          // client disconnected
-      client = server.available();
-      client.println("\nDV2JB ESP8266-powered Satnogs V3.1 AZEL Rotator");
-      client.println("Type '?' for more help on command");
-    }
-    else {
-      server.available().stop();  // have client, block new conections
-    }
-  }
+// Convert steps to degrees according to step/revolution, rotator gear box ratio and microstep
+float step2deg(int32_t step) {
+    return (360.00 * step / (SPR * RATIO));
 }
 
 // Move both axis with one direction in order to find home position, end-stop switches
-// seek_az - Steps to find home position for azimuth axis
-// seek_el - Steps to find home position for elevation axis
 enum _rotator_error homing(int32_t seek_az, int32_t seek_el) {
     bool isHome_az = false;
     bool isHome_el = false;
@@ -75,8 +63,7 @@ enum _rotator_error homing(int32_t seek_az, int32_t seek_el) {
             stepper_el.moveTo(stepper_el.currentPosition());
             isHome_el = true;
         }
-        // Check if the rotator goes out of limits or something goes wrong (in
-        // mechanical)
+        // Check if the rotator goes out of limits or something goes wrong (in mechanical)
         if ((stepper_az.distanceToGo() == 0 && !isHome_az) ||
             (stepper_el.distanceToGo() == 0 && !isHome_el)){
             return homing_error;
@@ -96,34 +83,38 @@ enum _rotator_error homing(int32_t seek_az, int32_t seek_el) {
     stepper_el.setCurrentPosition(0);
     control_az.setpoint = 0;
     control_el.setpoint = 0;
-
     return no_error;
 }
 
-// Convert degrees to steps according to step/revolution, rotator gear box ratio and microstep
-// deg - Degrees in float format
-// step - Steps for stepper motor driver, int32_t
-int32_t deg2step(float deg) {
-    return (RATIO * SPR * deg / 360);
-}
+// Telnet starts here
+void handleTelnet(){
+  if (server.hasClient()){
+    SerialPort.println("Client is now connected");
 
-// Convert steps to degrees according to step/revolution, rotator gear box ratio and microstep
-// step - Steps in int32_t format
-// deg - Degrees in float format
-float step2deg(int32_t step) {
-    return (360.00 * step / (SPR * RATIO));
+  	// client is connected
+    if (!client || !client.connected()){
+      // client disconnected
+      if(client) client.stop();          
+      client = server.available();
+      client.println("\nDV2JB ESP8266-powered Satnogs V3.1 AZEL Rotator");
+      client.println("Type '?' for more help on command");
+    }
+    else {
+      // have client, block new conections
+      server.available().stop();  
+    }
+  }
 }
-
 
 ///////////////////////// Setup /////////////////////////
-
 void setup() {
 
   // Wifi_STA
   WiFi.mode(WIFI_STA);        // To avoid esp8266 from going to AP mode
   WiFi.begin(ssid, password); //Connect to wifi
 
-  ArduinoOTA.onStart([]() {   //ArduinoOTA code starts
+  //ArduinoOTA code starts
+  ArduinoOTA.onStart([]() {   
     String type;
     if (ArduinoOTA.getCommand() == U_FLASH) {
       type = "sketch";
@@ -178,7 +169,8 @@ void setup() {
   stepper_el.setAcceleration(MAX_ACCELERATION);
   stepper_el.setMinPulseWidth(MIN_PULSE_WIDTH);
 
-  SerialPort.println("Connecting to Wifi");               // Wait for connection  
+  // Wait for connection
+  SerialPort.println("Connecting to Wifi");                 
   while (WiFi.status() != WL_CONNECTED) {   
     SerialPort.print("."); 
     delay(200);
@@ -194,10 +186,9 @@ void setup() {
 }
 
 ///////////////////////// Loop /////////////////////////
-
 void loop() {
   
-  // Keep feeding the watchdog
+  // Feed the watchdog
   ESP.wdtFeed();
 
   // Get end stop status
@@ -207,6 +198,7 @@ void loop() {
   // Run easycomm implementation
   comm.easycomm_proc();
 
+  // Always be ready when On-the-Air (OTA) sketch upload
   ArduinoOTA.handle();
 
   // Get position of both axis
@@ -255,6 +247,6 @@ void loop() {
           rotator.rotator_status = idle;
       }
   }
-  //Telnet loop
+  // Telnet loop
   handleTelnet();
 }
