@@ -10,7 +10,7 @@
 #define MIN_M2_ANGLE       0     // Minimum angle of elevation
 #define MAX_M2_ANGLE       360   // Maximum angle of elevation
 #define DEFAULT_HOME_STATE LOW  // Change to LOW according to Home sensor
-#define HOME_DELAY         150 // Time for homing Deceleration in millisecond
+#define HOME_DELAY         100 // Time for homing Deceleration in millisecond
 #define SerialPort         Serial
 
 // Enter your wifi SSID
