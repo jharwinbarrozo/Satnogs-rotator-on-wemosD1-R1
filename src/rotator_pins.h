@@ -9,7 +9,7 @@
 
 #define MOTOR_EN D8 ///< Digital output, EN pins for both A4988 drivers
 
-#define SW1 D13 ///< Digital input, to read the status of end-stop for AZ motor
+#define SW1 D5 ///< Digital input, to read the status of end-stop for AZ motor
 #define SW2 D2 ///< Digital input, to read the status of end-stop for EL motor
 
 #endif /* ROTATOR_PINS_H_ */
