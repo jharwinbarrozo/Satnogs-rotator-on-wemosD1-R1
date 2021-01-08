@@ -1,3 +1,4 @@
+
 #define SAMPLE_TIME        0.1   // Control loop in s
 #define RATIO              54    // Gear ratio of rotator gear box for V3.1 Satnogs
 #define MICROSTEP          16    // Set Microstep, A4988 1/16 ustep MS1 H, MS2 H, MS3 H. 
