@@ -1,4 +1,4 @@
-# SatNOGS Rotator Firmware for Wemos D1 R1 Microcontroller Board, for WIFI CONNECTION using Telnet
+# SatNOGS Rotator Firmware for Wemos D1 R1 Microcontroller Board, using Telnet for wireless serial connection
 
 Repository includes all source files for the SatNOGS rotator controller Firmware, instead of the custom SatNOGS PCB.
 
